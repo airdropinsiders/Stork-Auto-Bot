@@ -2,9 +2,7 @@
   "cognito": {
     "region": "ap-northeast-1",
     "clientId": "5msns4n49hmg3dftp2tp1t2iuh",
-    "userPoolId": "ap-northeast-1_M22I44OpC",
-    "username": "YOUR EMAIL",
-    "password": "YOUR PASSWORD"
+    "userPoolId": "ap-northeast-1_M22I44OpC"
   },
   "stork": {
     "intervalSeconds": 5

@@ -1,17 +1,24 @@
-const AmazonCognitoIdentity = require('amazon-cognito-identity-js');
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
-const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
-const { HttpsProxyAgent }= require('https-proxy-agent');
-const { SocksProxyAgent } = require('socks-proxy-agent');
+import AmazonCognitoIdentity from 'amazon-cognito-identity-js';
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import { accounts } from "./accounts.js"
+import { fileURLToPath } from 'url';
 
-global.navigator = { userAgent: 'node' };
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+// global.navigator = { userAgent: 'node' };
 
 // Load configuration from config.json
 function loadConfig() {
   try {
     const configPath = path.join(__dirname, 'config.json');
+
     if (!fs.existsSync(configPath)) {
       log(`Config file not found at ${configPath}, using default configuration`, 'WARN');
       // Create default config file if it doesn't exist
@@ -35,7 +42,8 @@ function loadConfig() {
     }
     
     const userConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    log('Configuration loaded successfully from config.json');
+    log('Configuration loaded successfully from config.json \n');
+    log('Accounts loaded successfully from accounts.js');
     return userConfig;
   } catch (error) {
     log(`Error loading config: ${error.message}`, 'ERROR');
@@ -67,14 +75,12 @@ const config = {
 };
 
 function validateConfig() {
-  if (!config.cognito.username || !config.cognito.password) {
-    log('ERROR: Username and password must be set in config.json', 'ERROR');
-    console.log('\nPlease update your config.json file with your credentials:');
+  if (!accounts[0].username || !accounts[0].password) {
+    log('ERROR: Username and password must be set in accounts.js', 'ERROR');
+    console.log('\nPlease update your accouns.js file with your credentials:');
     console.log(JSON.stringify({
-      cognito: {
         username: "YOUR_EMAIL",
         password: "YOUR_PASSWORD"
-      }
     }, null, 2));
     return false;
   }
@@ -158,12 +164,12 @@ class CognitoAuth {
 }
 
 class TokenManager {
-  constructor() {
+  constructor(i) {
     this.accessToken = null;
     this.refreshToken = null;
     this.idToken = null;
     this.expiresAt = null;
-    this.auth = new CognitoAuth(config.cognito.username, config.cognito.password);
+    this.auth = new CognitoAuth(accounts[i].username, accounts[i].password);
   }
 
   async getValidToken() {
@@ -443,6 +449,11 @@ if (!isMainThread) {
       log(`Successful: ${actualValidIncrease}`);
       log(`Failed: ${actualInvalidIncrease}`);
       log('--------- COMPLETE ---------');
+      
+      if(jobs < accounts.length) {
+        console.info(jobs);
+        main();
+      }
     } catch (error) {
       log(`Validation process stopped: ${error.message}`, 'ERROR');
     }
@@ -479,7 +490,9 @@ if (!isMainThread) {
       process.exit(1);
     }
     
-    const tokenManager = new TokenManager();
+    log(`processing ${accounts[jobs].username}`);
+    const tokenManager = new TokenManager(jobs);
+    jobs++;
 
     try {
       await tokenManager.getValidToken();
@@ -493,9 +506,10 @@ if (!isMainThread) {
       }, 50 * 60 * 1000);
     } catch (error) {
       log(`Application failed to start: ${error.message}`, 'ERROR');
-      process.exit(1);
+   //   process.exit(1);
     }
   }
-
+  
+  let jobs = 0;
   main();
 }

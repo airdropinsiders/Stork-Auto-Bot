@@ -1,4 +1,5 @@
 {
+  "type":"module",
   "name": "stork-auto-bot",
   "version": "1.0.0",
   "description": "Automated validation bot for Stork Oracle network",
