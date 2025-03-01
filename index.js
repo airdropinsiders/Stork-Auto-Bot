@@ -451,9 +451,8 @@ if (!isMainThread) {
       log('--------- COMPLETE ---------');
       
       if(jobs < accounts.length) {
-        console.info(jobs);
         main();
-      }
+      } 
     } catch (error) {
       log(`Validation process stopped: ${error.message}`, 'ERROR');
     }
@@ -489,7 +488,10 @@ if (!isMainThread) {
     if (!validateConfig()) {
       process.exit(1);
     }
-    
+    if(jobs > accounts.length) {
+      jobs = 0;
+      main();
+      } 
     log(`processing ${accounts[jobs].username}`);
     const tokenManager = new TokenManager(jobs);
     jobs++;
