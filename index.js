@@ -452,6 +452,9 @@ if (!isMainThread) {
       
       if(jobs < accounts.length) {
         main();
+      } else if(jobs == accounts.length - 1 || jobs === accounts.length) {
+        jobs = 0;
+        main();
       } 
     } catch (error) {
       log(`Validation process stopped: ${error.message}`, 'ERROR');
@@ -488,10 +491,7 @@ if (!isMainThread) {
     if (!validateConfig()) {
       process.exit(1);
     }
-    if(jobs > accounts.length) {
-      jobs = 0;
-      main();
-      } 
+    
     log(`processing ${accounts[jobs].username}`);
     const tokenManager = new TokenManager(jobs);
     jobs++;
@@ -508,7 +508,7 @@ if (!isMainThread) {
       }, 50 * 60 * 1000);
     } catch (error) {
       log(`Application failed to start: ${error.message}`, 'ERROR');
-   //   process.exit(1);
+      process.exit(1);
     }
   }
   
